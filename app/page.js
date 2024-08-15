@@ -10,6 +10,7 @@ export default function Home() {
   const [inventory, setInventory] = useState([]) // state variable to store inventory
   const [open, setOpen] = useState(false) // state variable to add & remove items
   const [itemName, setItemName] = useState('') // state variable to store name of items
+  const [search, setSearch] = useState('') // state variable to search for items
 
   // -- Functions -- 
 
@@ -57,6 +58,27 @@ export default function Home() {
     }
 
     await updateInventory()
+  }
+
+   // Function to Search Items
+   const searchItems = async (item) => {
+    if (item.trim() === '') {
+      await updateInventory(); // Show all items if search is empty
+      return;
+    }
+
+    const snapshot = query(collection(firestore, 'inventory')); // Get the full inventory
+    const docs = await getDocs(snapshot);
+    const inventoryList = [];
+    docs.forEach((doc) => {
+      if (doc.id.toLowerCase().includes(item.toLowerCase())) {
+        inventoryList.push({
+          name: doc.id,
+          ...doc.data(),
+        });
+      }
+    });
+    setInventory(inventoryList); // Set the filtered inventory
   }
 
   useEffect(() => {
@@ -115,6 +137,35 @@ export default function Home() {
           </Stack>
         </Box>
       </Modal>
+
+      <Stack direction="row" spacing={2}>
+        <TextField 
+          variant="outlined" 
+          placeholder="Search Item"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <Button
+          variant="outlined"
+          onClick={() => searchItems(search)}
+        >
+          Search
+        </Button>
+        <Button
+          variant="outlined"
+          onClick={() => {
+            setSearch('');
+            updateInventory();
+          }}
+        >
+          Reset
+        </Button>
+      </Stack>
+
+      <Stack direction="column" spacing={2}>
+        
+      </Stack>
+
       <Button 
         variant = "contained" 
         onClick = {() => { 
@@ -149,32 +200,35 @@ export default function Home() {
             bgColor = "#f0f0f0" 
             padding = {5}
             >
-              <Typography 
+              <Typography // Display code for Item Names
                 variant = "h3" 
                 color = "#333" 
                 textAlign = "center"
+                style={{ width: '10%', textAlign: 'left' }}
               >
                 {name.charAt(0).toUpperCase() + name.slice(1)}
               </Typography>
               
-              <Typography 
+              <Typography // Display code for Item Quantity
                 variant = "h4" 
                 color = "#333" 
                 textAlign = "center"
+                style={{ width: '10%', textAlign: 'center' }} 
               >
                 {quantity}
-              </Typography>
+              </Typography> 
 
-              <Stack direction={"row"} spacing={2}>
-              <Button 
+              
+              <Stack direction={"row"} spacing={2}> 
+              <Button // Display code for Add Button
               variant="contained" 
               onClick={() => {
-                addItem(name)
+                addItems(name)
               }}>
                 Add
               </Button>
 
-              <Button 
+              <Button // Display code for Remove Button
               variant="contained" 
               onClick={() => {
                 removeItem(name)
